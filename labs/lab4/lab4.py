@@ -34,6 +34,7 @@ def squares():
     win.getMouse()
     win.close()
 
+squares()
 
 def rectangle():
     """
