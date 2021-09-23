@@ -18,7 +18,7 @@ I certify that this assignment is entirely my own work.
 # step 4: assign variables for accumulators, acc1, acc2, acc3
 # step 5: create a loop with range as num, loop will take user input of values
 # step 6: create equations for rms average, harmonic mean, and geometric mean
-#         using the values input. use acc1,2,3 for each equation
+#         using the values input.
 # step 7: import math library for square root function
 # step 8: print rms average, harmonic mean, and geometric mean
 #         round to 3 decimal places
