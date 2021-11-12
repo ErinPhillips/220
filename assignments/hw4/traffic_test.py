@@ -1,30 +1,29 @@
-"""
-a lump sum of points are awarded per test.
-you cannot lose more points for a test than the max points per test
-"""
-
 import random
-
-import pytest
-
+from tests.test_framework import *
 from hw4 import traffic
-from tests.code_style import code_style
 from tests.hw3.test_case import TestCase, Road
-
-total = 0
-points_per_test = 5
-sub_points = 1
-code_style_points = 10
 
 
 def input_map(sentence):
-    return float(sentence.split(':')[1].strip())
+    try:
+        return float(sentence.split(':')[1].strip())
+    except:
+        print('\n********************************************************')
+        print('could not finish running test. make sure your output has a colon ":" before the value')
+        print('********************************************************')
+        exit(1)
 
 
 class TestClass:
 
-    # static tests
-    def test_output(self, monkeypatch, capfd):
+    def test_hw(self, monkeypatch, capfd):
+        builder = TestBuilder('traffic', 'traffic.py', 10, 1)
+        static_tests = self.build_static_test_section(monkeypatch, capfd)
+        dynamic_tests = self.build_dynamic_test_section(monkeypatch, capfd)
+        builder.add_items(static_tests, dynamic_tests)
+        builder.run()
+
+    def build_static_test_section(self, monkeypatch, capfd):
         road11 = Road(1, [20, 30, 15, 45])
         road12 = Road(2, [40, 30, 50])
         road13 = Road(3, [30, 60, 15, 55, 20])
@@ -33,29 +32,15 @@ class TestClass:
         test2 = TestCase([road21])
 
         inputs = [test1, test2]
-        self.run_test(inputs, 'static tests', monkeypatch, capfd)
+        return self.run_test(inputs, 'static tests', monkeypatch, capfd)
 
     # dynamic tests
-    def test_random(self, monkeypatch, capfd):
-        data = self.make_test_data(14)
-        self.run_test(data, 'random tests', monkeypatch, capfd)
-
-    # linting tests
-    def test_linting(self):
-        global code_style_points
-        global total
-        points = code_style('traffic.py', code_style_points)
-        total += points
-        if not points == code_style_points:
-            pytest.xfail(reason="Failed Code Style")
+    def build_dynamic_test_section(self, monkeypatch, capfd):
+        data = self.make_test_data(55)
+        return self.run_test(data, 'dynamic tests', monkeypatch, capfd)
 
     @staticmethod
-    def run_test(test_cases, test_type, monkeypatch, capfd):
-        global total
-        global points_per_test
-        global sub_points
-        failed = 0
-
+    def run_test(test_cases: list[TestCase], test_type, monkeypatch, capfd):
         # get all of the outputs for each test [[test 1 outputs], [test 2 outputs], ...]
         for test_case in test_cases:
             user_in = test_case.get_user_input()
@@ -66,66 +51,39 @@ class TestClass:
             output = captured.out.strip().split('\n')
             test_case.set_actual_values(list(map(input_map, output)))
 
-        print(f'\n\n============================== {test_type} start ===============================\n')
+        section = Section(test_type)
+        for index, test_case in enumerate(test_cases):
+            sub_section = Section(f'test {index + 1}', group_data=[f'user inputs: {test_case.get_user_input()}'])
 
-        for test_case in test_cases:
-            num_failed = test_case.num_failed()
-            if num_failed == 0:
-                print(f'PASSED {test_case.total_tests}/{test_case.total_tests} tests  +{str(points_per_test)}')
-                total += points_per_test
-            else:
-                points_off = sub_points * num_failed if sub_points * num_failed < points_per_test else points_per_test
-                print(f'FAILED {num_failed}/{test_case.total_tests} tests -{str(points_off)}')
-                print(f'\tdata:')
-                print(f'\t\tnumber of roads: {len(test_case.roads)}')
-                for road in test_case.roads:
-                    print(f'\t\troad {road.id}:')
-                    print(f'\t\t\tdays: {road.days}')
-                    print(f'\t\t\tcars per day: {road.cars_per_day}')
-                if test_case.expected_total_cars == test_case.actual_total_cars:
-                    print(f'\ttotal cars: PASSED | +{sub_points}')
-                else:
-                    print(f'\ttotal cars: FAILED | -{sub_points}')
-                    print(f'\t\texpected {test_case.expected_total_cars} but got {test_case.actual_total_cars}')
-                if test_case.expected_avg_cars == test_case.actual_avg_cars:
-                    print(f'\taverage cars: PASSED | +{sub_points}')
-                else:
-                    print(f'\taverage cars: FAILED | -{sub_points}')
-                    print(f'\t\texpected {test_case.expected_avg_cars} but got {test_case.actual_avg_cars}')
-                for road in test_case.roads:
-                    if road.expected_output == road.actual_output:
-                        print(f'\troad {road.id} average cars: PASSED | +{sub_points}')
-                    else:
-                        print(f'\troad {road.id} average cars: FAILED | -{sub_points}')
-                        print(f'\t\texpected {road.expected_output} but got {road.actual_output}')
-
-                total += points_per_test - points_off
-
-        noun = 'test' if num_failed == 1 else 'tests'
-        print(f'\n============================== {failed} {noun} failed ===============================\n')
+            sub_section.add_items(
+                Test('Total Cars', test_case.actual_total_cars, test_case.expected_total_cars),
+                Test('Average Cars', test_case.actual_avg_cars, test_case.expected_avg_cars)
+            )
+            for road_index, road in enumerate(test_case.roads):
+                sub_section.add_items(Test(f'Roads {road_index + 1}', road.actual_output, road.expected_output))
+            section.add_items(sub_section)
+        return section
 
     @staticmethod
-    def make_test_data(num):
-        data = []
-        for i in range(num):
+    def make_test_data(roads, test_cases_needed=7):
+        test_cases = [TestCase([Road(1, [0])])]
+        total_roads_needed = roads
+
+        roads_per_test_case = [0] * test_cases_needed
+        for n in range(total_roads_needed):
+            roads_per_test_case[n % test_cases_needed] += 1
+
+        # [3, 3, 2]
+        for num_roads in roads_per_test_case:
             roads = []
-            number_of_roads = random.randint(1, 10)
-            for road in range(number_of_roads):
+            for road_number in range(num_roads):
+                number_of_days = random.randint(1, 10)
                 cars_per_day = []
-                number_of_days = random.randint(1, 20)
                 for day in range(number_of_days):
-                    cars_per_day.append(random.randint(1, 20))
-                id = road + 1
-                roads.append(Road(id, cars_per_day))
-            data.append(TestCase(roads))
+                    cars_per_day.append(random.randint(1, 50))
+                road = Road(road_number + 1, cars_per_day)
+                roads.append(road)
 
-        return data
+            test_cases.append(TestCase(roads))
 
-    @pytest.fixture(scope='session', autouse=True)
-    def summary(self):
-        global total
-        global code_style_points
-        # Will be executed before the first test
-        yield
-        # Will be executed after the last test
-        print(f'\nTotal: {total} / 90')
+        return test_cases

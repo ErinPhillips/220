@@ -24,22 +24,12 @@ class TestCase:
             inp += road.get_user_input()
         return list(map(str, inp))
 
-    def num_failed(self):
-        failed = 0
-        if not self.actual_total_cars == self.expected_total_cars:
-            failed += 1
-        if not self.actual_avg_cars == self.expected_avg_cars:
-            failed += 1
-        for road in self.roads:
-            if not road.expected_output == road.actual_output:
-                failed += 1
-        return failed
-
     def set_actual_values(self, user_output):
         self.actual_avg_cars = user_output.pop(len(user_output) - 1)
         self.actual_total_cars = user_output.pop(len(user_output) - 1)
         for index, road_avg in enumerate(user_output):
             self.roads[index].actual_output = road_avg
+
 
 class Road:
 
@@ -59,8 +49,3 @@ class Road:
         gets the user input for this road
         """
         return [self.days] + self.cars_per_day
-
-    def did_pass_test(self):
-        if self.actual_output:
-            return self.actual_output == self.expected_output
-        return False

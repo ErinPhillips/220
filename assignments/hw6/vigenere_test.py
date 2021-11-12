@@ -1,81 +1,50 @@
 import json
 
-import pytest
-
 from hw6 import vigenere
 from tests import api_service
-from tests import code_style
-
-total = 0
-global_points = 5
-code_style_points = 10
+from tests.test_framework import *
 
 
 class TestClass:
 
-    # static tests
-    def test_output(self):
-        inputs = [
-            (('this program will be great', 'python'), 'IFBZDEDEKHAJXJEISTGCTA'),
-            (('the time has come the walrus said', 'oyster'), 'HFWMMDSFSLGFACLAINOJJNWJOGV'),
-            (('float like a butterfly', 'champ'), 'HSOMINPKQPDBTFTTMLK')
-        ]
-        self.run_test(inputs, 'static tests')
+    def test_hw(self):
+        builder = TestBuilder('Vigenere', 'vigenere.py', 15, 5)
+        builder.rc_file = '../../tests/hw5/.pylintrc'
+        static_tests = build_static_tests()
+        dynamic_tests = build_dynamic_tests()
+        builder.add_items(static_tests, dynamic_tests)
+        builder.run()
 
-    # dynamic tests
-    def test_api(self):
-        response = api_service.test('hw5', 'GET', params={'number': 13})
-        answers = json.loads(response.text)
-        a = 1
-        test_data = self.convert_test_data(answers)
-        self.run_test(test_data, 'api tests')
 
-    # linting tests
-    def test_linting(self):
-        global code_style_points
-        global total
-        points = code_style.code_style('mean.py', code_style_points, rcfile='../../tests/hw5/.pylintrc')
-        total += points
-        if not points == code_style_points:
-            pytest.xfail(reason="Failed Code Style")
+def build_static_tests():
+    inputs = [
+        (('this program will be great', 'python'), 'IFBZDEDEKHAJXJEISTGCTA'),
+        (('the time has come the walrus said', 'oyster'), 'HFWMMDSFSLGFACLAINOJJNWJOGV'),
+        (('float like a butterfly', 'champ'), 'HSOMINPKQPDBTFTTMLK')
+    ]
+    return run_test(inputs, 'static tests')
 
-    @staticmethod
-    def run_test(data, test_type):
-        global total
-        global global_points
-        failed = 0
-        print(f'\n\n============================== {test_type} start ===============================\n')
-        for inp in data:
-            message = inp[0][0]
-            key = inp[0][1]
-            expected = inp[1]
-            actual = vigenere.code(message, key)
-            if actual == expected:
-                print(f'PASSED +{global_points}')
-                print(f'\tmessage: "{message}" | key: "{key}" | cipher text: "{expected}"')
-                total += global_points
-            else:
-                print(f'FAILED | -{global_points}')
-                print(f'\tmessage: {message}, key: {key}')
-                print(f'\texpected {expected} but got {actual}')
-                failed += 1
-        noun = 'tests'
-        if failed == 1:
-            noun = 'test'
-        print(f'\n============================== {failed} {noun} failed ===============================\n')
 
-    @staticmethod
-    def convert_test_data(data):
-        inputs = []
-        for test in data:
-            inputs.append(((test['message'], test['key']), test['cipherText']))
-        return inputs
+def build_dynamic_tests():
+    response = api_service.test('hw5', 'GET', params={'number': 12})
+    answers = json.loads(response.text)
+    test_data = convert_test_data(answers)
+    return run_test(test_data, 'dynamic tests')
 
-    @pytest.fixture(scope='session', autouse=True)
-    def summary(self):
-        global total
-        global code_style_points
-        # Will be executed before the first test
-        yield
-        # Will be executed after the last test
-        print(f'\nTotal: {total} / 90')
+
+def run_test(data, test_type):
+    section = Section(test_type)
+    for inp in data:
+        message = inp[0][0]
+        key = inp[0][1]
+        expected = inp[1]
+        actual = vigenere.code(message, key)
+        section.add_items(Test(message, actual, expected, [f'message: {message}', f'key: {key}']))
+    return section
+
+
+def convert_test_data(data):
+    inputs = []
+    for test in data:
+        inputs.append(((test['message'], test['key']), test['cipherText']))
+    return inputs
