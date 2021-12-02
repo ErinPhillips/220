@@ -1,7 +1,5 @@
 import random
-import sys
 
-import pytest
 from graphics import GraphWin, Point, Rectangle, Text
 
 from hw9.button import Button
@@ -47,9 +45,13 @@ def build_sections():
     # get_label
     label_test = Test("get_label", my_button.get_label(), LABEL)
     # draw
-    my_button.draw(win)
-    draw_test_rect = Test('draw rectangle', win.items[0], rec)
-    draw_test_text = Test('draw text', win.items[1].getText(), LABEL)
+    outcome, res = run_safe(my_button.draw(win))
+    if outcome:
+        draw_test_rect = Test('draw rectangle', win.items[0], rec)
+        draw_test_text = Test('draw text', win.items[1].getText(), LABEL)
+    else:
+        draw_test_rect = Test('draw rectangle', win.items[0], rec)
+        draw_test_text = Test('draw text', win.items[1].getText(), LABEL)
     # undraw
     my_button.undraw()
     undraw_test = Test('undraw', len(win.items), 0)

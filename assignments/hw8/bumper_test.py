@@ -1,17 +1,21 @@
-import json
-
-from graphics import GraphWin, Circle, Point
+from graphics import Circle, Point
 
 from hw8 import bumper
-from tests import api_service
-from tests.hw7.test_case import TestCase
+from tests.hw8 import random_tests
+from tests.hw8.test_case import TestCase
 from tests.test_framework import *
 
-total = 0
-global_points = 5
-sub_points = 1
-code_style_points = 15
-win = GraphWin("test", 600, 400)
+
+class MockWin:
+    def __init__(self, width, height, *args, **kwargs):
+        self.width = width
+        self.height = height
+
+    def getWidth(self):
+        return self.width
+
+    def getHeight(self):
+        return self.height
 
 
 class TestClass:
@@ -19,8 +23,8 @@ class TestClass:
     def test_hw(self):
         builder = TestBuilder('Bumper', 'bumper.py', 15)
         static_tests = build_static_section()
-        # dynamic_teses = build_dynamic_section()
-        builder.add_items(static_tests)
+        dynamic_tests = build_dynamic_section()
+        builder.add_items(static_tests, dynamic_tests)
         builder.run()
 
 
@@ -28,47 +32,45 @@ class TestClass:
 def build_static_section():
     test_cases = TestCase()
     test_cases.did_collide_tests = [
-        {'x1': 71, 'y1': 74, 'r1': 7, 'x2': 51, 'y2': 185, 'r2': 7, 'expected': False},
-        {'x1': 36, 'y1': 54, 'r1': 29, 'x2': 10, 'y2': 47, 'r2': 29, 'expected': True},
-        {'x1': 7, 'y1': 8, 'r1': 9, 'x2': 10, 'y2': 11, 'r2': 12, 'expected': True},
-        {"x1": 87, "y1": 58, "r1": 20, "x2": 54, "y2": 100, "r2": 20, "expected": False},
-        {"x1": 59, "y1": 97, "r1": 38, "x2": 75, "y2": 82, "r2": 38, "expected": True},
-        {"x1": 97, "y1": 97, "r1": 42, "x2": 100, "y2": 1, "r2": 42, "expected": False}
+        ({'x1': 63, 'y1': 85, 'r1': 42, 'x2': 62, 'y2': 93, 'r2': 2, 'expected': True}, True),
+        ({'x1': 84, 'y1': 83, 'r1': 48, 'x2': 7, 'y2': 22, 'r2': 35, 'expected': False}, False),
+        ({'x1': 96, 'y1': 95, 'r1': 39, 'x2': 98, 'y2': 36, 'r2': 37, 'expected': True}, True),
+        ({'x1': 64, 'y1': 81, 'r1': 28, 'x2': 31, 'y2': 26, 'r2': 3, 'expected': False}, False),
+        ({'x1': 90, 'y1': 87, 'r1': 13, 'x2': 93, 'y2': 88, 'r2': 6, 'expected': True}, True),
+        ({'x1': 71, 'y1': 90, 'r1': 38, 'x2': 28, 'y2': 24, 'r2': 8, 'expected': False}, False)
     ]
     test_cases.get_random_tests = [10, 50, 100]
     test_cases.hit_vertical_tests = [
-        {'x': 120, 'y': 116, 'radius': 35, 'expected': False},
-        {'x': 19, 'y': 50, 'radius': 20, 'expected': True},
-        {'x': 20, 'y': 50, 'radius': 20, 'expected': True},
-        {'x': 21, 'y': 50, 'radius': 20, 'expected': False},
-        {'x': 59, 'y': 50, 'radius': 40, 'expected': False},
-        {'x': 560, 'y': 50, 'radius': 40, 'expected': True},
-        {'x': 561, 'y': 50, 'radius': 40, 'expected': True}
+        {'radius': 59, 'x': 58, 'y': 78, 'expected': True, 'width': 384, 'height': 829},
+        {'radius': 95, 'x': 534, 'y': 110, 'expected': False, 'width': 630, 'height': 159},
+        {'radius': 92, 'x': 111, 'y': 35, 'expected': True, 'width': 202, 'height': 332},
+        {'radius': 78, 'x': 158, 'y': 170, 'expected': False, 'width': 237, 'height': 356},
+        {'radius': 55, 'x': 74, 'y': 252, 'expected': True, 'width': 128, 'height': 656},
+        {'radius': 78, 'x': 79, 'y': 685, 'expected': False, 'width': 913, 'height': 971},
+        {'radius': 8, 'x': 931, 'y': 205, 'expected': True, 'width': 938, 'height': 666},
     ]
     test_cases.hit_horizontal_tests = [
-        {'x': 200, 'y': 40, 'radius': 10, 'expected': False},
-        {'x': 50, 'y': 19, 'radius': 20, 'expected': True},
-        {'x': 50, 'y': 20, 'radius': 20, 'expected': True},
-        {'x': 50, 'y': 21, 'radius': 20, 'expected': False},
-        {'x': 50, 'y': 59, 'radius': 40, 'expected': False},
-        {'x': 50, 'y': 360, 'radius': 40, 'expected': True},
-        {'x': 50, 'y': 361, 'radius': 40, 'expected': True}
+        {'radius': 16, 'x': 145, 'y': 15, 'expected': True, 'width': 181, 'height': 880},
+        {'radius': 48, 'x': 124, 'y': 580, 'expected': False, 'width': 595, 'height': 629},
+        {'radius': 8, 'x': 23, 'y': 12, 'expected': True, 'width': 274, 'height': 19},
+        {'radius': 87, 'x': 283, 'y': 88, 'expected': False, 'width': 496, 'height': 782},
+        {'radius': 100, 'x': 243, 'y': 99, 'expected': True, 'width': 577, 'height': 428},
+        {'radius': 89, 'x': 7, 'y': 90, 'expected': False, 'width': 149, 'height': 278},
+        {'radius': 40, 'x': 299, 'y': 318, 'expected': True, 'width': 455, 'height': 357},
     ]
     return run_test(test_cases, 'static tests')
 
 
 # dynamic tests
 def build_dynamic_section():
-    response = api_service.test('hw7', 'GET',
-                                params={'number': 13, 'width': win.getWidth(), 'height': win.getHeight()})
-    api_tests = json.loads(response.text)
+    dynamic_tests = random_tests.create(13)
     test_cases = TestCase()
-    test_cases.hit_vertical_tests = api_tests['hitVerticalTests']
-    test_cases.hit_horizontal_tests = api_tests['hitHorizontalTests']
-    test_cases.get_random_tests = api_tests['getRandomTests']
-    test_cases.did_collide_tests = api_tests['didCollideTests']
+    test_cases.hit_vertical_tests = dynamic_tests['hitVerticalTests']
+    test_cases.hit_horizontal_tests = dynamic_tests['hitHorizontalTests']
+    test_cases.get_random_tests = dynamic_tests['getRandomTests']
+    test_cases.did_collide_tests = dynamic_tests['didCollideTests']
 
-    return run_test(test_cases, 'api tests')
+    return run_test(test_cases, 'dynamic tests')
 
 
 def run_test(test_cases, test_type):
@@ -76,61 +78,85 @@ def run_test(test_cases, test_type):
 
     # DID COLLIDE TESTS
     collide_section = Section('did_collide()')
-    for i, test in enumerate(test_cases.did_collide_tests):
+    for i, test_tup in enumerate(test_cases.did_collide_tests):
+        test, t_or_f = test_tup
+        not_var = '' if t_or_f else 'not '
         c1 = Circle(Point(test['x1'], test['y1']), test['r1'])
         c2 = Circle(Point(test['x2'], test['y2']), test['r2'])
-        actual = bumper.did_collide(c1, c2)
-        collide_section.add_items(Test(f'test {i}', actual, test['expected'], [c1, c2]))
+        outcome, result = run_safe(lambda: bumper.did_collide(c1, c2))
+        collide_section.add_items(Test(f'test {i} - did {not_var}collide', result, test['expected'], [c1, c2]))
 
     # GET RANDOM TESTS
     get_random_section = Section('get_random()')
+    r = 2000
     for j, test in enumerate(test_cases.get_random_tests):
-        temp_actual = 0
+        # in range
         in_range = True
-        fail_range_value = 0
-        positive_in = False
-        negative_in = False
-        for i in range(700):
-            temp_actual = bumper.get_random(test)
-            if not (test * -1 <= temp_actual <= test):
+        fail_value = 0
+        error = False
+        res = 0
+        for i in range(r):
+            outcome, res = run_safe(lambda: bumper.get_random(test))
+            if not outcome:
+                error = True
+                fail_value = res
+                break
+            if res > test or res < test * -1:
                 in_range = False
-                fail_range_value = temp_actual
-            if temp_actual == test:
-                positive_in = True
-            if temp_actual == test * -1:
-                negative_in = True
-
-        if not in_range:
-            actual = fail_range_value
-            expected = f'-{test} <= actual <= {test}'
-        elif not positive_in:
-            actual = f'after multiple tests, value {test} never returned'
-            expected = f'should have seen {test} returned when called with argument {test}'
-        elif not negative_in:
-            actual = f'after multiple tests, value -{test} never returned'
-            expected = f'should have seen -{test} returned when called with argument {test}'
+                fail_value = res
+                break
+        if error or not in_range:
+            get_random_section.add_items(Test(f'in range test {j}', fail_value, f'between -{test} and {test}'))
         else:
-            actual = f'-{test} <= {temp_actual} <= {test}'
-            expected = f'-{test} <= {temp_actual} <= {test}'
-        get_random_section.add_items(Test(f'test {j}', actual, expected))
+            get_random_section.add_items(
+                Test(f'in range test {j}', f'{res} between -{test} and {test}', f'{res} between -{test} and {test}'))
+
+        # hits all values
+        fail_value = 0
+        error = False
+        possible_values = list(range(-test, test + 1))
+        for i in range(r):
+            outcome, res = run_safe(lambda: bumper.get_random(test))
+            if not outcome:
+                error = True
+                fail_value = res
+                break
+            try:
+                possible_values.remove(res)
+            except:
+                pass
+        if error:
+            get_random_section.add_items(Test(f'hits all values test {j}', fail_value, f'between -{test} and {test}'))
+        elif len(possible_values) > 0:
+            get_random_section.add_items(
+                Test(f'hits all values test {j}', f'values not returned from function', f'between -{test} and {test}',
+                     data=possible_values))
+        else:
+            get_random_section.add_items(Test(f'hits all values test {j}', True, True, show_actual_expected=False))
 
     # HIT VERTICAL TESTS
     hit_vertical_section = Section('hit_vertical()')
     for i, test in enumerate(test_cases.hit_vertical_tests):
         expected = test['expected']
         circle = Circle(Point(test['x'], test['y']), test['radius'])
-        data = (circle, win)
-        actual = bumper.hit_vertical(circle, win)
-        hit_vertical_section.add_items(Test(f'test {i}', actual, expected, data))
+        width = test['width']
+        height = test['height']
+        data = [circle, f'width: {width}', f'height: {height}']
+        win = MockWin(width, height)
+        _, res = run_safe(lambda: bumper.hit_vertical(circle, win))
+        hit_vertical_section.add_items(Test(f'test {i}', res, expected, data))
 
     # HIT HORIZONTAL TESTS
     hit_horizontal_section = Section('hit_horizontal()')
     for i, test in enumerate(test_cases.hit_horizontal_tests):
         expected = test['expected']
         circle = Circle(Point(test['x'], test['y']), test['radius'])
-        data = (circle, win)
-        actual = bumper.hit_horizontal(circle, win)
-        hit_horizontal_section.add_items(Test(f'test {i}', actual, expected, data))
+        width = test['width']
+        height = test['height']
+        data = [circle, f'width: {width}', f'height: {height}']
+        win = MockWin(width, height)
+        _, res = run_safe(lambda: bumper.hit_horizontal(circle, win))
+        hit_horizontal_section.add_items(Test(f'test {i}', res, expected, data))
 
     section.add_items(collide_section, get_random_section, hit_vertical_section, hit_horizontal_section)
     return section
